@@ -1,23 +1,23 @@
-const express = require('express');
-const { Todo } = require('../mongo')
-const router = express.Router();
+const express = require("express")
+const { Todo } = require("../mongo")
+const router = express.Router()
 
 /* GET todos listing. */
-router.get('/', async (_, res) => {
+router.get("/", async (_, res) => {
   const todos = await Todo.find({})
-  res.send(todos);
-});
+  res.send(todos)
+})
 
 /* POST todo to listing. */
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
   const todo = await Todo.create({
     text: req.body.text,
-    done: false
+    done: false,
   })
-  res.send(todo);
-});
+  res.send(todo)
+})
 
-const singleRouter = express.Router();
+const singleRouter = express.Router()
 
 const findByIdMiddleware = async (req, res, next) => {
   const { id } = req.params
@@ -28,22 +28,27 @@ const findByIdMiddleware = async (req, res, next) => {
 }
 
 /* DELETE todo. */
-singleRouter.delete('/', async (req, res) => {
-  await req.todo.delete()  
-  res.sendStatus(200);
-});
+singleRouter.delete("/", async (req, res) => {
+  await req.todo.delete()
+  res.sendStatus(200)
+})
 
 /* GET todo. */
-singleRouter.get('/', async (req, res) => {
-  res.sendStatus(405); // Implement this
-});
+singleRouter.get("/", async (req, res) => {
+  res.json(req.todo)
+})
 
 /* PUT todo. */
-singleRouter.put('/', async (req, res) => {
-  res.sendStatus(405); // Implement this
-});
+singleRouter.put("/", async (req, res) => {
+  const { text, done } = req.body
 
-router.use('/:id', findByIdMiddleware, singleRouter)
+  if (typeof text !== "undefined") req.todo.text = text
+  if (typeof done !== "undefined") req.todo.done = done
 
+  const updatedTodo = await req.todo.save()
+  res.json(updatedTodo)
+})
 
-module.exports = router;
+router.use("/:id", findByIdMiddleware, singleRouter)
+
+module.exports = router
